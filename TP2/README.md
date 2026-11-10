@@ -1,5 +1,17 @@
 # TP2 : Optimisation d'une application Node.js avec Docker
 
+## Analyse du code et du Dockerfile initial
+
+Le Dockerfile initial fonctionne, mais plusieurs mauvaises pratiques ont été identifiées :
+
+- L’image `node:latest` est très volumineuse et sa version peut changer avec le temps.
+- Le dossier `node_modules` de la machine locale est copié dans l’image. Ces dépendances peuvent être incompatibles avec le système du conteneur.
+- Aucun fichier `.dockerignore` n’est présent. Des fichiers inutiles ou sensibles peuvent donc être envoyés dans le contexte de build.
+- Tous les fichiers sont copiés avant l’installation des dépendances. Une modification du code oblige alors Docker à réinstaller les dépendances et empêche une bonne utilisation du cache.
+- `npm install` est utilisé alors qu’un fichier `package-lock.json` est disponible. `npm ci` permet une installation plus reproductible.
+- Des paquets système comme `build-essential` et `locales` sont installés alors qu’ils ne sont pas nécessaires à l’application.
+- Les ports `4000` et `5000` sont exposés alors que le serveur utilise uniquement le port `3000`.
+
 ## Mesure initiale
 
 ```bash
@@ -153,3 +165,12 @@ Dans ce projet, le multi-stage ne réduit pas la taille de l'image : elle augmen
 | Multi-stage, sans cache | 4,9 s | 248,2 MB |
 | Multi-stage, avec cache | 1,5 s | 248,2 MB |
 
+## Exposition du port utilisé
+
+Le serveur écoute uniquement sur le port 3000. Les ports 4000 et 5000 ont donc été retirés du Dockerfile :
+
+```dockerfile
+EXPOSE 3000
+```
+
+L'instruction `EXPOSE` ne publie pas directement le port sur la machine hôte. Elle indique le port prévu pour l'application et sert de documentation. Cette modification n'a pas d'impact notable sur la taille ou le temps de build, mais elle rend la configuration plus claire et cohérente avec le code.
