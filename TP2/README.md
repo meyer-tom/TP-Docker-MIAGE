@@ -80,3 +80,30 @@ Le build sans cache dure 25,4 secondes. Lorsque les couches sont déjà en cache
 | Cache optimisé, sans cache existant | 25 s | 1,89 GB |
 | Cache optimisé, avec cache | 10 s | 1,89 GB |
 
+## Utilisation d'une image de base légère
+
+L'image de base `node:latest` a été remplacée par une image Alpine :
+
+```dockerfile
+FROM node:22-alpine
+```
+
+Alpine est une distribution Linux beaucoup plus légère qu'une image système complète. La commande qui installait des paquets avec `apt-get` a également été supprimée, car Alpine n'utilise pas ce gestionnaire de paquets et ces dépendances ne sont pas nécessaires à l'application.
+
+Le build sans cache dure 16 secondes et le build avec cache dure 1,9 seconde. La taille de l'image passe de 1,89 GB à 227 MB, soit une réduction d'environ 90%.
+
+![Temps du build avec image Alpine, sans cache](images/tps-build-sans-cache-apres-opti-alpine.png)
+
+![Temps du build avec image Alpine, avec cache](images/tps-build-avec-cache-apres-opti-alpine.png)
+
+![Taille de l'image après optimisation avec image Alpine](images/taille-image-apres-opti-alpine.png)
+
+| Version | Temps de build | Taille de l'image |
+| --- | ---: | ---: |
+| Image initiale | 20 s | 1,88 GB |
+| Avec `.dockerignore` | 19 s | 1,89 GB |
+| Cache optimisé, sans cache existant | 25 s | 1,89 GB |
+| Cache optimisé, avec cache | 10 s | 1,89 GB |
+| Image Alpine, sans cache | 16 s | 227 MB |
+| Image Alpine, avec cache | 1,9 s | 227 MB |
+
