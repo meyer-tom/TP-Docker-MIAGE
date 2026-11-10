@@ -192,3 +192,82 @@ Consignes :
 - Testez l’application depuis votre navigateur.
   [http://localhost:3000](http://localhost:3000)
   ![résultat 5](images/resultat-5.png)
+
+# Exercice : Utilisation de docker compose
+
+> [!NOTE] Objectif
+> Déployer une application complexe avec Docker.
+
+Consignes :
+
+- Compléter votre fichier app.py afin de lui ajouter une connexion a un bdd mongoDB
+
+  ```python
+  from flask import Flask
+  from pymongo import MongoClient
+
+  try:
+     client = MongoClient("mongodb://mongo:27017")
+     db = client["ma_database"]
+     client.admin.command("ping")
+     print("Successfully connected")
+
+  except Exception as e:
+     print("Connection failed:", e)
+
+  app = Flask(__name__)
+
+  @app.route("/")
+  def hello():
+     return "Hello, World!"
+
+  if __name__ == "__main__":
+     app.run(host="0.0.0.0", port=3000)
+  ```
+
+- Écrivez un fichier docker compose avec vos deux conteneurs
+  1.  Mettre à jour le dockerfile pour rajouter la nouvelle dépendance :
+      ```Dockerfile
+      RUN pip install --no-cache-dir Flask pymongo
+      ```
+  2.  Faire le dockercompose en réutilisant le build précédent :
+
+      ```yaml
+      services:
+        app:
+          build: .
+          ports:
+            - "3000:3000"
+          depends_on:
+            - mongo
+
+        mongo:
+          image: mongo:8
+      ```
+
+- Lancer le docker compose puis à minima vérifier que la connexion c’est bien effectuer sur la base de données
+
+  ```bash
+  > docker compose up
+  [+] up 11/11
+  ✔ Image mongo:8 Pulled
+  [+] Building 1.3s (11/11) FINISHED
+  ...
+  ✔ Image mongo:8         Pulled
+  ✔ Image tp1-app         Built
+  ✔ Network tp1_default   Created
+  ✔ Container tp1-mongo-1 Created
+  ✔ Container tp1-app-1   Created
+  ...
+  app-1    | Successfully connected
+  app-1    |  * Serving Flask app 'app'
+  app-1    |  * Debug mode: off
+  app-1    | WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+  app-1    |  * Running on all addresses (0.0.0.0)
+  app-1    |  * Running on http://127.0.0.1:3000
+  app-1    |  * Running on http://192.168.107.3:3000
+  app-1    | Press CTRL+C to quit
+  app-1    | 192.168.107.1 - - [10/Nov/2026 07:55:13] "GET / HTTP/1.1" 200 -
+  app-1    | 192.168.107.1 - - [10/Nov/2026 07:55:13] "GET /favicon.ico HTTP/1.1" 404 -
+  ...
+  ```

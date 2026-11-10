@@ -8,7 +8,7 @@ WORKDIR /app
 COPY app.py ./
 
 # Installer les dépendances Python
-RUN pip install --no-cache-dir Flask
+RUN pip install --no-cache-dir Flask pymongo
 
 # Exposer le port sur lequel l'application Flask fonctionnera
 EXPOSE 3000
