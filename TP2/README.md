@@ -53,3 +53,30 @@ Après cette modification, le build dure 19 secondes et l'image mesure environ 1
 | Image initiale | 20 s | 1,88 GB |
 | Avec `.dockerignore` | 19 s | 1,89 GB |
 
+## Optimisation du cache des dépendances
+
+Les fichiers `package.json` et `package-lock.json` sont maintenant copiés avant le reste de l'application :
+
+```dockerfile
+COPY package*.json ./
+RUN npm ci
+COPY . .
+```
+
+La commande `npm ci` utilise directement le fichier `package-lock.json`. L'installation est donc reproductible et la couche contenant les dépendances peut être réutilisée tant que les fichiers `package*.json` ne changent pas.
+
+Le build sans cache dure 25,4 secondes. Lorsque les couches sont déjà en cache, il dure 10,5 secondes, soit environ 50% de temps en moins. La taille reste à 1,89 GB, car cette étape optimise le temps de build et non le contenu de l'image finale.
+
+![Temps du build avec cache après optimisation du cache](images/tps-build-sans-cache-apres-opti-cache.png)
+
+![Temps du build avec cache après optimisation du cache](images/tps-build-avec-cache-apres-opti-cache.png)
+
+![Taille de l'image après optimisation du cache](images/taille-image-apres-opti-cache.png)
+
+| Version | Temps de build | Taille de l'image |
+| --- | ---: | ---: |
+| Image initiale | 20 s | 1,88 GB |
+| Avec `.dockerignore` | 19 s | 1,89 GB |
+| Cache optimisé, sans cache existant | 25 s | 1,89 GB |
+| Cache optimisé, avec cache | 10 s | 1,89 GB |
+
