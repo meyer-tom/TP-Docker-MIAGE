@@ -107,3 +107,49 @@ Le build sans cache dure 16 secondes et le build avec cache dure 1,9 seconde. La
 | Image Alpine, sans cache | 16 s | 227 MB |
 | Image Alpine, avec cache | 1,9 s | 227 MB |
 
+## Utilisation d'un multi-stage build
+
+Le Dockerfile a été séparé en deux étapes. La première installe les dépendances et exécute le build :
+
+```dockerfile
+FROM node:22-alpine AS build
+
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --omit=dev
+COPY . .
+RUN npm run build
+```
+
+La seconde étape crée l'image finale et ne récupère que les éléments nécessaires au fonctionnement de l'application :
+
+```dockerfile
+FROM node:22-alpine AS runtime
+
+WORKDIR /app
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/server.js ./server.js
+CMD ["node", "server.js"]
+```
+
+Le build sans cache dure 4,9 secondes et le build avec cache dure 1,5 seconde. La taille obtenue est de 248,2 MB.
+
+![Temps du build avec multi-stage, sans cache](images/tps-build-sans-cache-apres-opti-multi-stage.png)
+
+![Temps du build avec multi-stage, avec cache](images/tps-build-avec-cache-apres-opti-multi-stage.png)
+
+![Taille de l'image après optimisation avec multi-stage](images/taille-image-apres-opti-multi-stage.png)
+
+Dans ce projet, le multi-stage ne réduit pas la taille de l'image : elle augmente même légèrement par rapport aux 227 MB de la version Alpine. Cela s'explique par le fait que l'application est très simple et que son script `build` ne génère pas de véritable dossier `dist`. L'image Alpine précédente était donc déjà très légère. Le multi-stage reste utile pour séparer la préparation de l'application de son image d'exécution, mais il n'apporte pas systématiquement un gain de taille.
+
+| Version | Temps de build | Taille de l'image |
+| --- | ---: | ---: |
+| Image initiale | 20 s | 1,88 GB |
+| Avec `.dockerignore` | 19 s | 1,89 GB |
+| Cache optimisé, sans cache existant | 25 s | 1,89 GB |
+| Cache optimisé, avec cache | 10 s | 1,89 GB |
+| Image Alpine, sans cache | 16 s | 227 MB |
+| Image Alpine, avec cache | 1,9 s | 227 MB |
+| Multi-stage, sans cache | 4,9 s | 248,2 MB |
+| Multi-stage, avec cache | 1,5 s | 248,2 MB |
+
