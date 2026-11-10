@@ -22,3 +22,34 @@ La taille de l'image est d'environ 1,88 GB :
 | Version | Temps de build | Taille de l'image |
 | --- | ---: | ---: |
 | Image initiale | 20 s | 1,88 GB |
+
+## Ajout `.dockerignore` et suppression des node_modules
+
+On ajout `.dockerignore` pour éviter d'envoyer des fichiers inutiles ou sensibles dans le contexte de build :
+
+```dockerignore
+node_modules
+.git
+*.log
+.env
+.env.*
+!.env.example
+```
+
+On supprime aussi la ligne qui copie les node_modules dans l'image, car elles ne sont pas nécessaires (elles seront installées directement dans le conteneur) :
+
+```dockerfile
+COPY node_modules ./node_modules
+```
+
+Après cette modification, le build dure 19 secondes et l'image mesure environ 1,89 GB. Pas grand chose n'a changé par rapport à la version initial. Cette étape permet surtout de rendre le build plus propre, plus sûr et indépendant de la machine locale.
+
+![Temps du build après ajout de .dockerignore](images/tps-build-apres-opti-dockerignore.png)
+
+![Taille de l'image après ajout de .dockerignore](images/taille-image-apres-opti-dockerignore.png)
+
+| Version | Temps de build | Taille de l'image |
+| --- | ---: | ---: |
+| Image initiale | 20 s | 1,88 GB |
+| Avec `.dockerignore` | 19 s | 1,89 GB |
+
