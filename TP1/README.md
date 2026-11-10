@@ -120,3 +120,75 @@
    > docker rm mon_nginx
    mon_nginx
    ```
+
+# Exercice : Déploiement d'une application Python Flask
+
+> [!NOTE] Objectif
+> Créer et lancer une application web simple avec Flask à l’aide de Docker.
+
+Consignes :
+
+- Créez un fichier app.py contenant une application Flask minimale. (hello world)
+
+  ```python
+  from flask import Flask
+
+  app = Flask(__name__)
+
+  @app.route("/")
+  def hello():
+      return "Hello, World!"
+
+  if __name__ == "__main__":
+      app.run(host="0.0.0.0", port=3000)
+  ```
+
+- Écrivez un Dockerfile pour construire l’image de l’application.
+
+  ```Dockerfile
+  # Utiliser l'image Python officielle comme image de base
+  FROM python:3.12-slim
+
+  # Définir le répertoire de travail à /app
+  WORKDIR /app
+
+  # Copier le code de l'application Flask dans le conteneur
+  COPY app.py ./
+
+  # Installer les dépendances Python
+  RUN pip install --no-cache-dir Flask
+
+  # Exposer le port sur lequel l'application Flask fonctionnera
+  EXPOSE 3000
+
+  # Définir la commande pour exécuter l'application Flask
+  CMD ["python", "app.py"]
+  ```
+
+- Construisez l’image et lancez un conteneur.
+
+  ```bash
+  > docker build -t python-app .
+  [+] Building 2.3s (10/10) FINISHED
+  => [internal] load build definition from Dockerfile
+  => => transferring dockerfile: 483B
+  => [internal] load metadata for docker.io/library/python:3.12-slim
+  ...
+  => => naming to docker.io/library/python-app:latest
+  => => unpacking to docker.io/library/python-app:latest
+
+  View build details: docker-desktop://dashboard/build/orbstack/orbstack/pirfkrnh7mwav2eyv56e6rxyb
+
+  > docker run -p 3000:3000 python-app
+  * Serving Flask app 'app'
+  * Debug mode: off
+  WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+  * Running on all addresses (0.0.0.0)
+  * Running on http://127.0.0.1:3000
+  * Running on http://192.168.215.2:3000
+  Press CTRL+C to quit
+  ```
+
+- Testez l’application depuis votre navigateur.
+  [http://localhost:3000](http://localhost:3000)
+  ![résultat 5](images/resultat-5.png)
